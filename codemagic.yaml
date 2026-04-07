@@ -5,6 +5,9 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: com.hitmm44.waterreminder
       vars:
         XCODE_PROJECT: WaterReminder.xcodeproj
         XCODE_SCHEME: WaterReminder
@@ -18,16 +21,17 @@ workflows:
         script: |
           xcodegen generate
 
-      - name: Build unsigned app (for validation)
+      - name: Apply provisioning profiles
         script: |
-          xcodebuild -project "$XCODE_PROJECT" \
-            -scheme "$XCODE_SCHEME" \
-            -sdk iphoneos \
-            -configuration Release \
-            -archivePath $CM_BUILD_DIR/build/WaterReminder.xcarchive \
-            clean archive \
-            CODE_SIGNING_ALLOWED=NO
+          xcode-project use-profiles
+
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
-      - build/**/*.xcarchive
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
       - /tmp/xcodebuild_logs/*.log
