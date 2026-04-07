@@ -1,0 +1,33 @@
+workflows:
+  ios-workflow:
+    name: iOS IPA Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      vars:
+        XCODE_PROJECT: WaterReminder.xcodeproj
+        XCODE_SCHEME: WaterReminder
+
+    scripts:
+      - name: Install XcodeGen
+        script: |
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        script: |
+          xcodegen generate
+
+      - name: Build unsigned app (for validation)
+        script: |
+          xcodebuild -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $CM_BUILD_DIR/build/WaterReminder.xcarchive \
+            clean archive \
+            CODE_SIGNING_ALLOWED=NO
+
+    artifacts:
+      - build/**/*.xcarchive
+      - /tmp/xcodebuild_logs/*.log
